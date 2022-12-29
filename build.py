@@ -98,6 +98,17 @@ def expand(build: pd.Series):
     # 返回
     return expanded_build
 
+def write_build(build_json_path: str):
+    d = {}
+    build_amount = 0
+    for i in range(all_build_amount):
+        if raw_build_data.iloc[i]['启用'] == 'yes':
+            d[build_amount] = expand(raw_build_data.iloc[i])
+            build_amount += 1
+    build_df = pd.DataFrame(d)
+    build_df.to_json(path_or_buf=build_json_path, force_ascii=False)
+    print('展开完成.')
+    return build_df
 
 all_build_amount = 0
 for i in raw_build_data.index:
@@ -105,17 +116,19 @@ for i in raw_build_data.index:
         all_build_amount = i
         break
 
-
 print('正在展开build......')
-d = {}
-build_amount = 0
-for i in range(all_build_amount):
-    if raw_build_data.iloc[i]['启用'] == 'yes':
-        d[build_amount] = expand(raw_build_data.iloc[i])
-        build_amount += 1
-build_df = pd.DataFrame(d)
-build_df.to_json(path_or_buf=proDir + '/config/expend_build.json', force_ascii=False)
-print('展开完成.')
+build_json_path = proDir + '/config/expend_build.json'
+if os.path.exists(build_json_path):
+    c = input("build文件已存在，是否更新？输入n以跳过更新")
+    if(c == "n"):
+        build_df = pd.read_json(build_json_path)
+        for v in build_df:
+            for k in ("flowerMainWeights", "featherMainWeights", "sandMainWeights", "cupMainWeights", "headMainWeights", "secWeights"):
+                build_df[v][k] = pd.Series(build_df[v][k])
+    else:
+        build_df = write_build(build_json_path)
+else:
+    build_df = write_build(build_json_path)
 
 if __name__ == '__main__':
     pass
