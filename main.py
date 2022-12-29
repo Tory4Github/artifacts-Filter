@@ -15,7 +15,6 @@ cfg.read(proDir + '/config/screen.ini')
 score_threshold = float(cfg.items('screen')[0][1])
 rarity_threshold = float(cfg.items('screen')[1][1])
 
-
 def sort_art(df: pd.DataFrame):
     k = 0  #
     sorted_df = df.iloc[0:1]
@@ -40,6 +39,14 @@ def sort_art(df: pd.DataFrame):
     return sorted_df
 
 
+fitness_sub = {
+    "flower": 1,
+    "feather": 1,
+    "sand": 0.8,
+    "cup": 0.6,
+    "head": 0.8,
+}
+
 def adapt(art: Artifact, df: pd.DataFrame):
     """对每一个build进行适配性评分"""
     d_temp = {}
@@ -51,9 +58,9 @@ def adapt(art: Artifact, df: pd.DataFrame):
         fitness += art.main.multiply(df[k]['{}MainWeights'.format(art.position)]).dropna().sum()  # 主属性加权和
         fitness += art.sec.multiply(df[k]['secWeights']).dropna().sum()  # 副属性加权和
         if art.set not in df[k]['sets']:  # 非套装扣0.6
-            fitness -= 0.6
+            fitness -= fitness_sub[art.position]
         if art.star < 5:  # 非五星扣0.6
-            fitness -= 0.6
+            fitness -= 1
         adapt_score = fitness / df[k]['best_{}'.format(art.position)]  # 适配分 = 适配度 / 最佳适配度
         # 将build-评分-难度储存到列表中，并以指针为key储存到字典中
         build_adapt['buildName'] = df[k]['buildName']
@@ -100,7 +107,8 @@ if __name__ == '__main__':
                 p_ += 1
         idx  =idx + 1
     all_score = pd.DataFrame(art_d).T
-    all_score = all_score.sort_values(by='bestScore', ascending=False)
+    # all_score = all_score.sort_values(by='bestScore', ascending=False)
+    all_score = all_score.sort_values(by='index', ascending=True)
     print('共有{}件圣遗物, 显示其中{}件'.format(len(artifacts), all_score.shape[0]))
     for i in range(all_score.shape[0]):
         print('<============================【{}】============================>'.format(i+1))
@@ -188,5 +196,3 @@ if __name__ == '__main__':
     print('需要加锁good.json以下圣遗物')   
     print(list_lock)              
     input('请按任意键继续...')
-    time.sleep(999)
-    print('999秒后自动关闭窗口')
