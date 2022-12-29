@@ -12,9 +12,15 @@ proDir = os.path.split(os.path.realpath(__file__))[0]
 cfg = ConfigParser()
 cfg.read(proDir + '/config/screen.ini')
 
-score_threshold = float(cfg.items('screen')[0][1])
+score_threshold_position = {
+    "flower": float(cfg.items('screen')[2][1] or cfg.items('screen')[0][1]),
+    "feather": float(cfg.items('screen')[3][1] or cfg.items('screen')[0][1]),
+    "sand": float(cfg.items('screen')[4][1] or cfg.items('screen')[0][1]),
+    "cup": float(cfg.items('screen')[5][1] or cfg.items('screen')[0][1]),
+    "head": float(cfg.items('screen')[6][1] or cfg.items('screen')[0][1]),
+}
+score_threshold = min(score_threshold_position.values())
 rarity_threshold = float(cfg.items('screen')[1][1])
-
 
 def sort_art(df: pd.DataFrame):
     k = 0  #
@@ -86,7 +92,8 @@ if __name__ == '__main__':
         temp_best = 0   
         if a.rarity > 0:
             temp_best, temp_art_df = adapt(a, build_df)
-            if temp_best > score_threshold or a.rarity > rarity_threshold:  # 筛选最佳适配度或稀有度达标的圣遗物
+            # if temp_best > score_threshold or a.rarity > rarity_threshold:  # 筛选最佳适配度或稀有度达标的圣遗物
+            if temp_best > score_threshold_position[a.position] or a.rarity > rarity_threshold:
                 art_score = pd.Series([], dtype='float64')
                 art_score['artAbstract'] = a.abstract
                 art_score['artMain'] = a.main_chs
@@ -188,5 +195,3 @@ if __name__ == '__main__':
     print('需要加锁good.json以下圣遗物')   
     print(list_lock)              
     input('请按任意键继续...')
-    time.sleep(999)
-    print('999秒后自动关闭窗口')
